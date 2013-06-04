@@ -49,8 +49,8 @@ def any_tableset(fileobj, mimetype=None, extension=None):
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',)
             or (extension and extension.lower() in ('xlsx',))):
         return XLSXTableSet(fileobj)
-    if mimetype in ('text/html',) \
-            or (extension and extension.lower() in ('htm', 'html',)):
+    if (mimetype in ('text/html',) 
+            or (extension and extension.lower() in ('htm', 'html',))):
         return HTMLTableSet(fileobj)
     if mimetype:
         raise ValueError("Unrecognized MIME type: {mimetype}".format(
