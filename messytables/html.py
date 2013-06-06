@@ -19,7 +19,7 @@ class HTMLTableSet(TableSet):
     @property
     def tables(self):
         def rowset_name(x):
-            json.dumps(dict(x.attrib))
+            return json.dumps(dict(x.attrib))
 
         return [HTMLRowSet(rowset_name(x), x) for x in self.htmltables]
 
