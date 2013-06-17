@@ -46,7 +46,7 @@ class HTMLRowSet(RowSet):
         super(HTMLRowSet, self).__init__()
 
     def raw(self, sample=False):
-        blank_cells = defaultdict(list)  # ie row 2, cols 3,4,6: { 2 : [3,4,6] }
+        blank_cells = defaultdict(list)  # ie row 2, cols 3,4,6: {2: [3,4,6]}
         for r, row in enumerate(self.sheet.xpath('.//tr')):
             # TODO: handle header nicer - preserve the fact it's a header!
             html_cells = row.xpath('.//*[name()="td" or name()="th"]')
@@ -68,7 +68,7 @@ class HTMLRowSet(RowSet):
                             blank_cells[y].append(x)
                 output_column += 1
 
-            cells = [Cell(cell.text_content(), raw=cell) for cell in html_cells]
+            cells = [Cell(cell.text_content()) for cell in html_cells]
             yield insert_blank_cells(cells, blank_cells[r])
             if sample and r == self.window:
                 return
