@@ -11,6 +11,7 @@ from messytables import (CSVTableSet, StringType, HTMLTableSet,
                          IntegerType, rowset_as_jts,
                          types_processor, type_guess)
 
+import lxml.html
 
 class ReadTest(unittest.TestCase):
     def test_read_simple_csv(self):
@@ -254,6 +255,9 @@ class ReadTest(unittest.TestCase):
         row_set = table_set.tables[0]
         row = list(row_set.sample)[0]
         assert_in('</th>',row[4].properties['html'])
+        for cell in row:
+            if 'span' not in cell.properties:
+                lxml.html.fromstring(cell.properties['html'])
 
     def test_read_span_html(self):
         fh = horror_fobj('rowcolspan.html')
