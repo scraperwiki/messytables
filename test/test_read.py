@@ -188,6 +188,27 @@ class ReadTest(unittest.TestCase):
         row_types = map(lambda c: c.type, data[2])
         assert_equal(expected_types, row_types)
 
+    def test_apply_null_values(self):
+        fh = horror_fobj('null.csv')
+        table_set = CSVTableSet(fh)
+        row_set = table_set.tables[0]
+        types = type_guess(row_set.sample, strict=True)
+        expected_types = [IntegerType(), StringType(), IntegerType(), StringType()]
+        assert_equal(types, expected_types)
+
+        row_set.register_processor(types_processor(types))
+        data = list(row_set)
+        # treat null as non empty text and 0 as non empty integer
+        assert [x.empty for x in data[0]] == [False, False, False, False]
+        assert [x.empty for x in data[1]] == [False, False, False, False]
+        assert [x.empty for x in data[2]] == [False, False, True, True]
+        assert [x.empty for x in data[3]] == [False, False, False, False]
+        assert [x.empty for x in data[4]] == [False, False, False, True]
+        assert [x.empty for x in data[5]] == [False, False, False, True]
+
+        # we expect None for Integers and "" for empty strings in CSV
+        assert [x.value for x in data[2]] == [3, "null", None, ""], data[2]
+
     def test_read_type_know_simple(self):
         fh = horror_fobj('simple.xls')
         table_set = XLSTableSet(fh)
@@ -279,6 +300,35 @@ class ReadTest(unittest.TestCase):
 
         for test in tests:
             assert_equal(magic[test], tests[test])
+
+    def test_read_nested_html(self):
+        fh = horror_fobj('complex.html')
+        table_set = HTMLTableSet(fh)
+        row_set={}
+        for table in table_set.tables:
+            row_set[table.name]=table
+
+        # contains_other_tables contains no meaningful data
+        other = row_set['{"style": "contains_other_tables"}']
+        rows = list(other)
+        assert_equal(len(rows),1)
+        assert_equal(len(rows[0]),1)
+        assert_equal(rows[0][0].value.strip(),'')
+
+    def test_read_anatomy_html(self):
+        fh = horror_fobj('complex.html')
+        table_set = HTMLTableSet(fh)
+        row_set={}
+        for table in table_set.tables:
+            row_set[table.name]=table
+
+        # but contains_thead_tfoot_tbody has things in the right order
+        anatomy = row_set['{"style": "contains_thead_tfoot_tbody"}']
+        builder = []
+        for row in anatomy:
+            for cell in row:
+                builder.append(cell.value)
+        assert_equal(builder, ['head','body','foot'])
 
     def test_rowset_as_schema(self):
         from StringIO import StringIO as sio
