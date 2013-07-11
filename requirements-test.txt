@@ -8,4 +8,4 @@ nose
 requests>=1.0
 json-table-schema
 lxml
-
+-e git+https://github.com/scraperwiki/pdftables#egg=pdftables
