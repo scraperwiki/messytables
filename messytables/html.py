@@ -48,7 +48,7 @@ def insert_blank_cells(row, blanks):
     # DISCUSS: option to repeat top-left of col/rowspan.
     # or to identify that areas are a single cell, originally.
     for i in blanks:
-        row.insert(i, Cell(""))
+        row.insert(i, Cell("", properties={'span': True}))
     return row
 
 
@@ -78,23 +78,26 @@ class HTMLRowSet(RowSet):
             # TODO: handle header nicer - preserve the fact it's a header!
             html_cells = row.xpath('.//*[name()="td" or name()="th"]')
 
-            """ at the end of this chunk, you will have an accurate blank_cells."""
+            # at the end of this chunk, you will have an accurate blank_cells
             output_column = 0
             for html_cell in html_cells:
                 assert type(r) == int
                 while output_column in blank_cells[r]:
-                    output_column += 1  # pass over col, doesn't exist in src table
+                    output_column += 1  # pass over col, not in source table
                 rowspan = int(html_cell.attrib.get('rowspan', "1"))
                 colspan = int(html_cell.attrib.get('colspan', "1"))
                 x_range = range(output_column, output_column + colspan)
                 y_range = range(r, r + rowspan)
                 for x in x_range:
                     for y in y_range:
-                        if (output_column, r) != (x, y):  # don't skip current cell
+                        if (output_column, r) != (x, y):
+                            # don't skip this cell
                             blank_cells[y].append(x)
                 output_column += 1
 
-            cells = [Cell(cell.text_content()) for cell in html_cells]
+            cells = [Cell(cell.text_content(),
+                          properties={'html': lxml.html.tostring(cell)})
+                     for cell in html_cells]
             yield insert_blank_cells(cells, blank_cells[r])
             if sample and r == self.window:
                 return
