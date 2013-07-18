@@ -313,7 +313,10 @@ class ReadTest(unittest.TestCase):
         rows = list(other)
         assert_equal(len(rows),1)
         assert_equal(len(rows[0]),1)
-        assert_equal(rows[0][0].value.strip(),'')
+        assert_equal(rows[0][0].value.\
+                     replace(" ","").\
+                     replace("\n","")
+                     , 'headfootbody')
 
     def test_read_anatomy_html(self):
         fh = horror_fobj('complex.html')

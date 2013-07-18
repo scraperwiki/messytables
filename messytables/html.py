@@ -39,7 +39,9 @@ class HTMLTableSet(TableSet):
     @property
     def tables(self):
         def rowset_name(x):
-            return json.dumps(dict(x.attrib))
+            attrs = dict(x.attrib)
+            del attrs['xypath']
+            return json.dumps(attrs)
 
         return [HTMLRowSet(rowset_name(x), x) for x in self.htmltables]
 
@@ -67,6 +69,16 @@ class HTMLRowSet(RowSet):
         self.window = window or 1000
         super(HTMLRowSet, self).__init__()
 
+    def in_table(self, els):
+        """
+        takes a list of xpath elements, and returns only those
+        which occur in the specified table as the most recent
+        table.
+        """
+
+        return [e for e in els if self.sheet in e.xpath("./ancestor::table[1]")]
+           
+
     def raw(self, sample=False):
         def identify_anatomy(tag):
             # 0: thead, 1: tbody, 2: tfoot
@@ -74,17 +86,17 @@ class HTMLRowSet(RowSet):
                      './/ancestor::tbody',
                      './/ancestor::tfoot']
             for i, part in enumerate(parts):
-                if tag.xpath(part):
+                if self.in_table(tag.xpath(part)):
                     return i
             return 2 # default to body
 
         blank_cells = defaultdict(list)  # ie row 2, cols 3,4,6: {2: [3,4,6]}
-        allrows = sorted(self.sheet.xpath(".//tr"), key = lambda tag: identify_anatomy(tag))
+        allrows = sorted(self.in_table(self.sheet.xpath(".//tr")), key = lambda tag: identify_anatomy(tag))
         # http://stackoverflow.com/questions/1915376/ - sorted() is stable.
 
         for r, row in enumerate(allrows):
             # TODO: handle header nicer - preserve the fact it's a header!
-            html_cells = row.xpath('.//*[name()="td" or name()="th"]')
+            html_cells = self.in_table(row.xpath('.//*[name()="td" or name()="th"]'))
 
             # at the end of this chunk, you will have an accurate blank_cells
             output_column = 0
