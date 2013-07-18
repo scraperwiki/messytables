@@ -26,13 +26,13 @@ class HTMLTableSet(TableSet):
         # Grab tables that don't contain tables, remove from root, repeat.
         while True:
             dropped = False
-            tables = root.xpath('//table')
+            tables = root.xpath('//table[not(@xypath)]')
             if not tables:
                 break
             for t in tables:
-                if not t.xpath(".//table"):
+                if not t.xpath(".//table[not(@xypath)]"):
                     self.htmltables.append(t)
-                    t.drop_tree()
+                    t.attrib['xypath'] = 'done'
                     dropped = True
             assert dropped, "Didn't find any tables not containing other tables. This is a bug."  # avoid infinite loops
 
